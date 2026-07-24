@@ -1,0 +1,92 @@
+classDiagram
+    class Piece {
+        +path
+        +stems
+        +midi
+        +midi_stems
+        +bpm
+        +time_signature
+        +key
+        +beatmap
+        +is_separated
+        +is_transcribed
+        +is_postprocessed
+        +set_midi()
+        +set_beatmap()
+        +combine_midis()
+    }
+
+    class Handler {
+        <<abstract>>
+        +set_next(handler: Handler) Handler
+        +handle(request: Piece) Optional[str]
+    }
+
+    class AbstractHandler {
+        <<abstract>>
+        -_next_handler: Handler
+        +set_next(handler: Handler) Handler
+        +handle(request: Piece) str
+    }
+
+    Handler <|-- AbstractHandler
+
+    class IBeattracker {
+        <<abstract>>
+        +DEFAULT_OUTPUT_PATH
+        +track_beats(input_path, output_path) str
+        +handle(request: Piece) str
+    }
+
+    class BeatThisBeattracker {
+        +DEFAULT_OUTPUT_PATH
+        +track_beats(input_path, output_path) str
+        +help()
+    }
+
+    AbstractHandler <|-- IBeattracker
+    IBeattracker <|-- BeatThisBeattracker
+
+    class ISeparator {
+        <<abstract>>
+        +separate_stems(input_path) list[str]
+        +handle(request: Piece) str
+    }
+
+    class DemucsSeparator {
+        -_demucs_models
+        +DEFAULT_OUTPUT_PATH
+        +__init__(model)
+        +separate_stems(input_path) list[str]
+    }
+
+    AbstractHandler <|-- ISeparator
+    ISeparator <|-- DemucsSeparator
+
+    class ITranscriber {
+        <<abstract>>
+        +audio_to_midi(input_path) str
+        +handle(request: Piece) str
+    }
+
+    class BasicPitchTranscriber {
+        +__init__()
+        +help()
+        +audio_to_midi(input_path, output_path) str
+        +configure(...)
+        +_generate_basic_pitch_args()
+        +load_config()
+        +save_config()
+    }
+
+    class MuscriptorTranscriber {
+        +__init__()
+        +audio_to_midi(input_path, output_path) str
+        +help()
+    }
+
+    AbstractHandler <|-- ITranscriber
+    ITranscriber <|-- BasicPitchTranscriber
+    ITranscriber <|-- MuscriptorTranscriber
+
+    Piece ..> Handler : request object

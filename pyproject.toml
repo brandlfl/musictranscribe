@@ -1,0 +1,27 @@
+[project]
+name = "autotranscribe"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11" # demucs: >=3.10, basic-pitch: <=3.11, madmom-modern: >=3.11
+dependencies = [
+    "cython>=3.2.8",
+    "librosa>=0.11.0",
+    "madmom-modern",
+    "mido>=1.3.3",
+    "numpy>=1.26.4",
+    "pyaudio>=0.2.14",
+    "scipy>=1.15.3",
+    "numba>=0.58.0",
+    # "setuptools<=80.10.2", # for classic madmom
+    "music21>=10.5.0",
+]
+
+[tool.uv]
+required-environments = [
+    # change this to your setup if needed. Note that tensorflow may not support all platforms
+    "sys_platform == 'win32' and platform_machine == 'AMD64'"
+]
+
+[tool.uv.sources]
+madmom-modern = { git = "https://github.com/imcmurray/madmom-modern" }
