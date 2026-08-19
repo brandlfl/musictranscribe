@@ -1,12 +1,16 @@
 # Installation
-
+### Method 1: Use the installation script
+If you are on Windows run `installation.bat`. This should install the required programs and dependencies. 
+However you will need to install the C++ build tools manually as explained in step 5.
+Additionally you need to sign up to HuggingFace to use MuScriptor. Follow the instructions in step 8. 
+### Method 2: Follow the steps manually
 1. Install `uv`. On Windows use the command ```winget install --id=astral-sh.uv  -e```. For other systems refer to `uv`s [Installation page](https://docs.astral.sh/uv/getting-started/installation/).
 2. (optional) To support audio formats other than .wav install `ffmpeg` on Windows with ```winget install -e --id Gyan.FFmpeg``` or refer to the [Installation page](https://ffmpeg.org/download.html).
 3. It is highly recommended to install a Notation tool for view scores and convert them to pdf. I recommend MuseScore Studio. Install directly ```winget install -e --id Musescore.Musescore``` or download [here](https://musescore.org/en).
 4. Test the environment by opening a terminal in the same directory as this README file and execute ```uv run main.py```
 5. If `madmom` is not working: 
     1. Install C++ Build Tools version >= 14 to properly use the `Cython` package. From the [Installation page](https://visualstudio.microsoft.com/de/visual-cpp-build-tools/) download and execute the installer. 
-    2. In the menu choose what to install or change the installation to match what is described in [this issue](https://github.com/CPJKU/madmom/issues/478). 
+    2. In the menu choose what to install or change the installation to match what is described in [this issue](https://github.com/CPJKU/madmom/issues/478). Make sure to tick the installation-options shown here: ![Visual Studio C++ Build tools Installer](CppBuildToolsInstallation.png) 
     3. Open a PowerShell in this projects folder (the same folder this README file is in) and execute the following four lines: 
     ```SET DISTUTILS_USE_SDK=1```
     ```& 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvarsall.bat' x64``` change the path if you use a different version. 
@@ -20,10 +24,17 @@
 
 # Usage 
 
-Check out main.py and its tests. Run it with ```uv run main.py```. Then build your own chains of transcription tools. 
+Check out main.py and its tests. Run it with ```uv run main.py```. Then build your own chains of transcription tools and use cases. 
 
 # TODO
 
 - Keep up to date with the latest AMT developments
-- Make a stable fallback environment for MuScriptor
-- Find a way to install the secondary executables from the fixed demucs and basic-pitch environments
+- Get MuScriptor to run on GPU
+- Error-Check and correct the Midi Output
+- Find ways to improve transcription quality
+- Implement some use cases
+
+# Install environments with binaries 
+1. Demucs: ```uv tool install git+https://github.com/brandlfl/demucs```
+2. Basic Pitch: ```uv tool install --python cp311 git+https://github.com/brandlfl/basic-pitch-env --force```
+3. MuScriptor: ```uv tool install muscriptor```. This will run on the CPU on Windows because the command for the installation with GPU support mentioned in the project does not work. 

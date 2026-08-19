@@ -1,0 +1,74 @@
+classDiagram
+    class Piece {
+        +path
+        +stems
+        +midi
+        +midi_stems
+        +bpm
+        +time_signature
+        +key
+        +beatmap
+        +is_separated
+        +is_preprocessed
+        +is_transcribed
+        +is_postprocessed
+        +set_midi(new_midi)
+        +set_beatmap(beatmap)
+        +combine_midis(midi_files, output_file)
+    }
+
+    class Handler {
+        <<abstract>>
+        +set_next(handler)
+        +handle(request)
+    }
+
+    class AbstractHandler {
+        <<abstract>>
+        -_next_handler
+        +set_next(handler)
+        +handle(request)
+    }
+
+    class MonkeyHandler
+    class SquirrelHandler
+    class DogHandler
+
+    class IBeattracker {
+        <<abstract>>
+    }
+    class IPostprocessor {
+        <<abstract>>
+    }
+    class IPreprocessor {
+        <<abstract>>
+    }
+    class ISeparator {
+        <<abstract>>
+    }
+    class ITranscriber {
+        <<abstract>>
+    }
+
+    class BeatThisBeattracker
+    class DemucsSeparator
+    class BasicPitchTranscriber
+    class MuscriptorTranscriber
+
+    Handler <|-- AbstractHandler
+    AbstractHandler <|-- MonkeyHandler
+    AbstractHandler <|-- SquirrelHandler
+    AbstractHandler <|-- DogHandler
+
+    AbstractHandler <|-- IBeattracker
+    AbstractHandler <|-- IPostprocessor
+    AbstractHandler <|-- IPreprocessor
+    AbstractHandler <|-- ISeparator
+    AbstractHandler <|-- ITranscriber
+
+    IBeattracker <|-- BeatThisBeattracker
+    ISeparator <|-- DemucsSeparator
+    ITranscriber <|-- BasicPitchTranscriber
+    ITranscriber <|-- MuscriptorTranscriber
+
+    Piece ..> Handler : uses

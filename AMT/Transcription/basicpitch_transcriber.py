@@ -7,6 +7,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 DEFAULT_BP_OUTPUT_PATH = "transcribed/basicpitch"
+FALLBACK_BP_COMMAND = ["uvx", "--python", "3.11", "--from", "git+https://github.com/brandlfl/basic-pitch-env.git", "basic-pitch"]
+INSTALLED_BP_COMMAND = ["basic-pitch"]
 
 class BasicPitchTranscriber(ITranscriber):
     """Implementation of the audio_to_midi transcription using the Basic Pitch Model from 2022. 
@@ -20,15 +22,14 @@ class BasicPitchTranscriber(ITranscriber):
     def help(self):
         """Prints the help message for the Basic Pitch model."""
         try:
-            subprocess.run(["basic-pitch", "--help"], check=True)    
-        except subprocess.CalledProcessError as e:
-            logger.warning(f"basic-pitch command failed. Using fallback from git now")
+            subprocess.run([*INSTALLED_BP_COMMAND, "--help"], check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logger.warning(f"installed basic-pitch command failed or not found. Attempting fallback. Error: {e}")
             self.use_fallback = True
             try:
-                # run command: uvx --python 3.11 --from git+https://github.com/brandlfl/basicpitchuv.git basic-pitch --help
-                subprocess.run(["uvx", "--python", "3.11", "--from", "git+https://github.com/brandlfl/basicpitchuv.git", "basic-pitch", "--help"], check=True)    
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"Error occurred while trying to get help for Basic Pitch: {e}")
+                subprocess.run([*FALLBACK_BP_COMMAND, "--help"], check=True)
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                logger.error(f"basic-pitch fallback command failed. Please check your installation. Error: {e}")
     
     def audio_to_midi(self, input_path: str, output_path: str = DEFAULT_BP_OUTPUT_PATH, apply_config: bool = True, *basic_pitch_args) -> str:
         in_path = Path(input_path)
@@ -41,7 +42,7 @@ class BasicPitchTranscriber(ITranscriber):
         #     audio_paths = [str(in_path)]
 
         if output_path == DEFAULT_BP_OUTPUT_PATH:
-            out_path = Path(output_path) / in_path.stem
+            out_path = Path(output_path) / in_path.parent.stem
         else:
             out_path = Path(output_path)
         Path(out_path).mkdir(parents=True, exist_ok=True)
@@ -50,18 +51,34 @@ class BasicPitchTranscriber(ITranscriber):
             logger.debug(f"Attempting to run basic-pitch {str(out_path)} {str(in_path)}")
             if apply_config:
                 args = self._generate_basic_pitch_args()
-            else: 
-                args = basic_pitch_args
-            subprocess.run(["uvx", "--python", "3.11", "--from", "git+https://github.com/brandlfl/basicpitchuv.git", "basic-pitch", *args, str(out_path), str(in_path)], check=True)
-        except subprocess.CalledProcessError as e:
+            else:
+                args = list(basic_pitch_args)
+            # try installed basic-pitch first, fall back to uvx invocation
+            try:
+                subprocess.run([*INSTALLED_BP_COMMAND, *args, str(out_path), str(in_path)], check=True)
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                logger.warning(f"Installed basic-pitch failed or not found. Falling back to uvx. Error: {e}")
+                try:
+                    subprocess.run([*FALLBACK_BP_COMMAND, *args, str(out_path), str(in_path)], check=True)
+                except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                    raise RuntimeError(f"Error occurred while transcribing audio to MIDI: {e}")
+        except Exception as e:
             raise RuntimeError(f"Error occurred while transcribing audio to MIDI: {e}")
         
         if not out_path.exists():
             raise FileNotFoundError(f"Output directory not found: {out_path.as_posix()}")
+
         output_paths = [str(stem) for stem in out_path.iterdir() if stem.is_file()]
+        # after full demucs separation there should be 4 stems: bass, drums, other, vocals
+        # now find the right file
+        the_right_file = ""
+        for stem in output_paths:
+            if stem.find(in_path.stem) != -1 and stem.endswith(".mid"):
+                the_right_file = str(stem)
+                break
         # TODO: basic pitch is made for passing directories and converting a batch of files 
         # muscriptor however expects one file in and one file out
-        return output_paths[0]
+        return the_right_file
  
     def configure(self, 
                   model_path: str | None = None,

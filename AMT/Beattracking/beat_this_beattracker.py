@@ -23,7 +23,7 @@ class BeatThisBeattracker(IBeattracker):
             out_path = Path(output_path) / (in_path.stem + ".beats")
         else:
             out_path = Path(output_path)
-        Path(out_path).mkdir(parents=True, exist_ok=True)
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
 
         try:
             logger.debug(f"Attempting to track beats of {str(in_path)} and write to {str(out_path)}")

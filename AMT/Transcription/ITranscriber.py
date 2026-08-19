@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from AMT.Handler import AbstractHandler
 from AMT.Piece import Piece
 from pathlib import Path
-from mido import MidiFile, MidiTrack
+from mido import MidiFile, MidiTrack, MetaMessage
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class ITranscriber(AbstractHandler, ABC):
                 midi_files = []
                 for stem in request.stems:
                     midi_stem = self.audio_to_midi(stem)
-                    midi_files.append(midi_stem)
+                    midi_files.append(str(midi_stem)) # str conversion required to store value not reference!
                 logger.debug(f"Midi files: {midi_files}")
                 request.midi_stems.extend(midi_files)
                 # combine midi stems. TODO: The Piece class should maybe do that by itself

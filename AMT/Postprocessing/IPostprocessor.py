@@ -2,21 +2,21 @@ from abc import ABC, abstractmethod
 from AMT.Handler import AbstractHandler
 from AMT.Piece import Piece
 
-class ISeparator(AbstractHandler, ABC):
-    """Interface for audio separation implementations."""
+class IPostprocessor(AbstractHandler, ABC):
+    """Interface for postprocessing the generated MIDI files."""
     @abstractmethod
     def process_midi(self, input_path: str) -> str:
-        """Separate stems from an audio file.
+        """Process a MIDI file.
 
         Parameters
         ----------
         input_path : str
-            Path to the input audio file.
+            Path to the input midi file.
 
         Returns
         -------
-        list[str]
-            Paths to the separated single-instrument output files.
+        str
+            Path to the output file.
         """
         raise NotImplementedError
 

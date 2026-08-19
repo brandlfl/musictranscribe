@@ -59,8 +59,12 @@ def test_transcribers_direct(audio_file):
     stem_dir = Path(stem_paths[0]).parent.as_posix()
 
     transcriber = BasicPitchTranscriber()
-    midi_bp = transcriber.audio_to_midi(stem_dir, DEFAULT_BP_OUTPUT_PATH)
-    midi_bp_combined = combine_midis(midi_bp, str(Path(stem_dir) / "combined_basicpitch.mid"))
+    midi_stems = []
+    for stem in stem_paths:
+        midi_stem = transcriber.audio_to_midi(stem, DEFAULT_BP_OUTPUT_PATH)
+        print(f"Transcribed {stem} to {midi_stem}")
+        midi_stems.append(midi_stem)
+    midi_bp_combined = combine_midis(midi_stems, str(Path(stem_dir) / "combined_basicpitch.mid"))
 
     # or use new Muscriptor for multi-instrumental transcription
     transcriber = MuscriptorTranscriber()
@@ -97,6 +101,10 @@ def main():
     print("Chain: muscriptor\n", "Result at", piece.midi)
     score_mu = music21.converter.parse(str(piece.midi))
     score_mu.show()
+
+    # or export to pdf with MuseScore Studio installed
+    # import subprocess
+    # subprocess.run(["mscore", "-o",  "'My Score.pdf'", "'My Score.mscz'"])
 
 def combine_midis(midi_files: list[str], output_file: str | None = None) -> str:
     """Combine multiple MIDI files into one."""

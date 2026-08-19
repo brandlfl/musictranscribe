@@ -4,9 +4,11 @@ import subprocess
 from pathlib import Path
 
 import logging
-logger = logging.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 DEFAULT_MUSCRIPTOR_OUTPUT_PATH = "transcribed/muscriptor"
+FALLBACK_MUSCRIPTOR_COMMAND = ["uvx", "muscriptor"]
+INSTALLED_MUSCRIPTOR_COMMAND = ["muscriptor"]
 
 class MuscriptorTranscriber(ITranscriber):
     """Implementation of the audio_to_midi transcription using the Muscriptor Model from 2026. 
@@ -70,15 +72,20 @@ class MuscriptorTranscriber(ITranscriber):
             out_path = Path(output_path) / (in_path.stem + ".mid")
         else:
             out_path = Path(output_path)
-        Path(out_path).mkdir(parents=True, exist_ok=True)
-
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
 
         try:
             logger.debug(f"Attempting to run muscriptor with {str(in_path)} and saving to {str(out_path)}")
-            subprocess.run(["uv", "run", "muscriptor", "transcribe", str(in_path), "--output", str(out_path), *muscriptor_args], check=True)
-            # subprocess.run(["uvx", "muscriptor", "transcribe", str(in_path), "--output", str(out_path), *muscriptor_args], check=True)
+            subprocess.run([*INSTALLED_MUSCRIPTOR_COMMAND, "transcribe", str(in_path), "--output", str(out_path), *muscriptor_args], check=True)
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Error occurred while transcribing audio to MIDI: {e}")
+            try:
+                logger.warning(f"Installed Muscriptor command failed. Error: {e}. Attempting fallback with uvx")
+                logger.debug(f"Attempting to run muscriptor with {str(in_path)} and saving to {str(out_path)}")
+                subprocess.run([*FALLBACK_MUSCRIPTOR_COMMAND, "transcribe", str(in_path), "--output", str(out_path), *muscriptor_args], check=True)
+                # subprocess.run(["uvx", "muscriptor", "transcribe", str(in_path), "--output", str(out_path), *muscriptor_args], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Muscriptor command failed. Please check your installation. Error: {e}")
+                raise RuntimeError(f"Error occurred while transcribing audio to MIDI: {e}")
         
         if not out_path.exists():
             raise FileNotFoundError(f"Output file or directory not found: {out_path.as_posix()}")
@@ -103,7 +110,12 @@ class MuscriptorTranscriber(ITranscriber):
 
 """
         try:
-            subprocess.run(["uvx", "muscriptor", "--help"], check=True)
+            subprocess.run([*INSTALLED_MUSCRIPTOR_COMMAND, "--help"], check=True)
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Error occurred while trying to get help for Muscriptor: {e}")
+            try:
+                logger.warning(f"Installed Muscriptor command failed. Error: {e}. Attempting fallback with uvx")
+                subprocess.run([*FALLBACK_MUSCRIPTOR_COMMAND, "--help"], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Muscriptor command failed. Please check your installation. Error: {e}")
+                raise RuntimeError(f"Error occurred while trying to get help for Muscriptor: {e}")
     

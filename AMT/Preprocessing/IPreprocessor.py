@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from AMT.Handler import AbstractHandler
 from AMT.Piece import Piece
 
-class ISeparator(AbstractHandler, ABC):
-    """Interface for audio separation implementations."""
+class IPreprocessor(AbstractHandler, ABC):
+    """Interface for audio preprocessing."""
     @abstractmethod
     def process_wav(self, input_path: str) -> str:
-        """Separate stems from an audio file.
+        """Process an audio file.
 
         Parameters
         ----------
@@ -15,8 +15,8 @@ class ISeparator(AbstractHandler, ABC):
 
         Returns
         -------
-        list[str]
-            Paths to the separated single-instrument output files.
+        str
+            Path to the processed output file.
         """
         raise NotImplementedError
 
